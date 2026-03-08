@@ -1,0 +1,322 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'DynamoDB tables for GramSaarthi AI platform'
+
+Parameters:
+  TablePrefix:
+    Type: String
+    Default: 'gramsaarthi'
+    Description: 'Prefix for all table names'
+  
+  Environment:
+    Type: String
+    Default: 'dev'
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: 'Environment name'
+
+Resources:
+  # EnterpriseProfiles Table
+  EnterpriseProfilesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_EnterpriseProfiles'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # VoiceSessions Table
+  VoiceSessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_VoiceSessions'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: enterprise_id
+          AttributeType: S
+        - AttributeName: start_time
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI2-SessionsByEnterprise
+          KeySchema:
+            - AttributeName: enterprise_id
+              KeyType: HASH
+            - AttributeName: start_time
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # ActionPlans Table
+  ActionPlansTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_ActionPlans'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # FinancialData Table
+  FinancialDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_FinancialData'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # OperationalData Table
+  OperationalDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_OperationalData'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # Schemes Table
+  SchemesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_Schemes'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: scheme_type
+          AttributeType: S
+        - AttributeName: last_updated
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI3-SchemesByType
+          KeySchema:
+            - AttributeName: scheme_type
+              KeyType: HASH
+            - AttributeName: last_updated
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # MandiPrices Table
+  MandiPricesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_MandiPrices'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # Alerts Table
+  AlertsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_Alerts'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: alert_status
+          AttributeType: S
+        - AttributeName: created_date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1-AlertsByStatus
+          KeySchema:
+            - AttributeName: alert_status
+              KeyType: HASH
+            - AttributeName: created_date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+  # AnalyticsEvents Table
+  AnalyticsEventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${TablePrefix}_${Environment}_AnalyticsEvents'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: Application
+          Value: GramSaarthi-AI
+
+Outputs:
+  EnterpriseProfilesTableName:
+    Description: 'EnterpriseProfiles table name'
+    Value: !Ref EnterpriseProfilesTable
+    Export:
+      Name: !Sub '${AWS::StackName}-EnterpriseProfilesTable'
+
+  VoiceSessionsTableName:
+    Description: 'VoiceSessions table name'
+    Value: !Ref VoiceSessionsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-VoiceSessionsTable'
+
+  ActionPlansTableName:
+    Description: 'ActionPlans table name'
+    Value: !Ref ActionPlansTable
+    Export:
+      Name: !Sub '${AWS::StackName}-ActionPlansTable'
+
+  FinancialDataTableName:
+    Description: 'FinancialData table name'
+    Value: !Ref FinancialDataTable
+    Export:
+      Name: !Sub '${AWS::StackName}-FinancialDataTable'
+
+  OperationalDataTableName:
+    Description: 'OperationalData table name'
+    Value: !Ref OperationalDataTable
+    Export:
+      Name: !Sub '${AWS::StackName}-OperationalDataTable'
+
+  SchemesTableName:
+    Description: 'Schemes table name'
+    Value: !Ref SchemesTable
+    Export:
+      Name: !Sub '${AWS::StackName}-SchemesTable'
+
+  MandiPricesTableName:
+    Description: 'MandiPrices table name'
+    Value: !Ref MandiPricesTable
+    Export:
+      Name: !Sub '${AWS::StackName}-MandiPricesTable'
+
+  AlertsTableName:
+    Description: 'Alerts table name'
+    Value: !Ref AlertsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-AlertsTable'
+
+  AnalyticsEventsTableName:
+    Description: 'AnalyticsEvents table name'
+    Value: !Ref AnalyticsEventsTable
+    Export:
+      Name: !Sub '${AWS::StackName}-AnalyticsEventsTable'

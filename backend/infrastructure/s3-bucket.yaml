@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'S3 bucket for GramSaarthi AI platform with folder structure and policies'
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: gramsaarthi-data
+    Description: Name of the S3 bucket
+  
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+
+Resources:
+  GramSaarthiDataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${BucketName}-${Environment}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          # Auto-delete audio files after 7 days
+          - Id: DeleteOldAudioFiles
+            Status: Enabled
+            Prefix: audio/
+            ExpirationInDays: 7
+          
+          # Auto-delete cache files after 90 days
+          - Id: DeleteOldCacheFiles
+            Status: Enabled
+            Prefix: cache/
+            ExpirationInDays: 90
+          
+          # Keep documents for 1 year
+          - Id: DeleteOldDocuments
+            Status: Enabled
+            Prefix: documents/
+            ExpirationInDays: 365
+      
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+            AllowedHeaders:
+              - '*'
+            MaxAge: 3600
+            ExposedHeaders:
+              - ETag
+      
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      
+      Tags:
+        - Key: Project
+          Value: GramSaarthi-AI
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  # Bucket policy for Lambda access
+  GramSaarthiBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref GramSaarthiDataBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # Allow Lambda functions to read/write
+          - Sid: AllowLambdaAccess
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt GramSaarthiDataBucket.Arn
+              - !Sub '${GramSaarthiDataBucket.Arn}/*'
+          
+          # Deny unencrypted uploads
+          - Sid: DenyUnencryptedUploads
+            Effect: Deny
+            Principal: '*'
+            Action: s3:PutObject
+            Resource: !Sub '${GramSaarthiDataBucket.Arn}/*'
+            Condition:
+              StringNotEquals:
+                s3:x-amz-server-side-encryption: AES256
+
+Outputs:
+  BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref GramSaarthiDataBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+  
+  BucketArn:
+    Description: ARN of the S3 bucket
+    Value: !GetAtt GramSaarthiDataBucket.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketArn'
+  
+  BucketDomainName:
+    Description: Domain name of the S3 bucket
+    Value: !GetAtt GramSaarthiDataBucket.DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketDomainName'
